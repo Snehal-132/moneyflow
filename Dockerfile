@@ -1,14 +1,13 @@
-# Use official OpenJDK image
-FROM openjdk:17-jdk-slim
-
-# Set working directory
+# Stage 1: Build the application
+FROM maven:3.8.5-openjdk-17 AS builder
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copy the built jar file from target folder to /app
-COPY target/*.jar app.jar
-
-# Expose port 8080
+# Stage 2: Create the runtime image
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 7000
-
-# Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
